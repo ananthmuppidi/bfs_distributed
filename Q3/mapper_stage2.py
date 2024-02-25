@@ -6,7 +6,7 @@ def emit(key, value):
 try:
     for _line in sys.stdin:
         line = _line.strip()
-        node_id, value = line.split(' ', 1)
+        node_id, value = line.split('\t', 1)
         distance, neighbours = value.split('|', 1)
         distance = int(distance)
         emit(node_id, distance)

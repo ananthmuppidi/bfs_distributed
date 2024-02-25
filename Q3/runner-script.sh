@@ -1,13 +1,13 @@
-STREAM_JAR=$1       # Path to the Hadoop Streaming JAR
-LOCAL_INP=$2        # Local directory containing input files
-HDFS_INP=$3         # HDFS directory to store the initial input files
-HDFS_OUT=$4         # HDFS directory to store the final output files
-FILES=$5            # Path to mapper and reducer files
+#!/usr/bin/bash
+STREAM_JAR=$1       
+LOCAL_INP=$2        
+HDFS_INP=$3         
+HDFS_OUT=$4      
 
-# Specify the number of iterations
+FILES=./
+
 NUM_ITERATIONS=3
 
-# Normalize input paths to remove trailing slashes (if any)
 HDFS_INP="${HDFS_INP%/}"
 HDFS_OUT="${HDFS_OUT%/}"
 LOCAL_INP="${LOCAL_INP%/}"
@@ -25,17 +25,12 @@ hdfs dfs -rm -r ${HDFS_INP}
 hdfs dfs -rm -r ${HDFS_OUT} 
 hdfs dfs -rm -r ${HDFS_INTERMEDIATE}
 
-# Create the HDFS input directory and copy local input files to it
 hdfs dfs -mkdir -p ${HDFS_INP}
 hdfs dfs -put ${LOCAL_INP}/* ${HDFS_INP}/
 
 INPUT_FOLDER=${HDFS_INP}
 for ((i=1; i<=NUM_ITERATIONS; i++)); do
-    if [ $i -eq $NUM_ITERATIONS ]; then
-        OUTPUT_FOLDER=${HDFS_OUT}
-    else
-        OUTPUT_FOLDER=${HDFS_INTERMEDIATE}/iteration_$i
-    fi
+    OUTPUT_FOLDER=${HDFS_INTERMEDIATE}/iteration_$i
     echo -e "Iteration $i: \033[32m $INPUT_FOLDER, $OUTPUT_FOLDER\033[0m"
     hadoop jar $STREAM_JAR \
         -D mapred.reduce.tasks=3 \
@@ -48,3 +43,14 @@ for ((i=1; i<=NUM_ITERATIONS; i++)); do
     INPUT_FOLDER=${OUTPUT_FOLDER}
 done
 
+
+hadoop jar $STREAM_JAR \
+        -D mapred.reduce.tasks=3 \
+        -input ${HDFS_INTERMEDIATE}/iteration_$NUM_ITERATIONS \
+        -output ${HDFS_OUT} \
+        -mapper "mapper_stage2.py" \
+        -reducer "reducer_stage2.py" \
+        -file ${FILES}/mapper_stage2.py \
+        -file ${FILES}/reducer_stage2.py 
+
+hdfs dfs -rm -r ${HDFS_INTERMEDIATE}

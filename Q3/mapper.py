@@ -14,7 +14,6 @@ try:
             distance, neighbours = value.split('|', 1)
             distance = int(distance)
         else:
-            a = 1
             parts = line.split()
             node_id = parts[0]
             neighbours = parts[1:]

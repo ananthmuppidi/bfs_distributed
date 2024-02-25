@@ -1,0 +1,49 @@
+#!/usr/bin/bash
+STREAM_JAR=$1       
+LOCAL_INP=$2        
+HDFS_INP=$3         
+HDFS_OUT=$4      
+
+FILES=./
+
+NUM_ITERATIONS=3
+
+HDFS_INP="${HDFS_INP%/}"
+HDFS_OUT="${HDFS_OUT%/}"
+LOCAL_INP="${LOCAL_INP%/}"
+FILES="${FILES%/}"
+
+echo "STREAM_JAR: $STREAM_JAR"
+echo "LOCAL_INP: $LOCAL_INP"
+echo "HDFS_INP: $HDFS_INP"
+echo "HDFS_OUT: $HDFS_OUT"
+echo "FILES: $FILES"
+
+HDFS_INTERMEDIATE="${HDFS_INP}/intermediate"
+
+# hdfs dfs -rm -r ${HDFS_INP} 
+hdfs dfs -rm -r ${HDFS_OUT} 
+# hdfs dfs -rm -r ${HDFS_INTERMEDIATE} 
+
+# hdfs dfs -mkdir -p ${HDFS_INP}
+# hdfs dfs -put ${LOCAL_INP}/* ${HDFS_INP}/
+
+
+# hadoop jar $STREAM_JAR \
+#         -D mapred.reduce.tasks=3 \
+#         -input ${HDFS_INP} \
+#         -output ${HDFS_INTERMEDIATE} \
+#         -mapper "mapper0.py" \
+#         -reducer "reducer0.py" \
+#         -file ${FILES}/mapper0.py \
+#         -file ${FILES}/reducer0.py 
+
+hadoop jar $STREAM_JAR \
+        -D mapred.reduce.tasks=3 \
+        -input ${HDFS_INTERMEDIATE} \
+        -output ${HDFS_OUT} \
+        -mapper "mapper1.py" \
+        -reducer "reducer1.py" \
+        -file ${FILES}/mapper1.py \
+        -file ${FILES}/reducer1.py 
+
